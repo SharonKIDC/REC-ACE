@@ -9,8 +9,8 @@ The environment is based on python 3.8.x, given the following paths you can inst
 - `<project-root>` - a path where the code is cloned to
 
 ```Bash
-`<interpreter-path>` -m venv `<venv-root>`
-`<venv-root>`/Scripts/activate
+<interpreter-path> -m venv <venv-root>
+<venv-root>/Scripts/activate
 python -m pip install --upgrade pip
-pip install -r `<project-root>`/requirements.txt
+pip install -r <project-root>/requirements.txt
 ```
