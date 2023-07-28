@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('-dest_path',
                         type=str,
                         help='Destination folder path for the extracted files',
-                        default='./data/')
+                        default='./')
     args = parser.parse_args()
 
     download_and_unzip(args.url, args.dest_path)
