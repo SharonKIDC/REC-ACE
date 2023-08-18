@@ -35,7 +35,7 @@ class SentencesDataset(Dataset):
         }
 
 
-def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True):
+def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True, num_bins=10):
     """
     Prepare data for training
     :param data: list of data loaded from jsons
@@ -43,6 +43,7 @@ def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase
     :param batch_size: batch size for data loader
     :param shuffle: to shuffle or not to shuffle
     :param lowcase: whether to use transform all sentences in data to lower case
+    :param num_bins: number of bins when quantize the coinfidence scores
     :return: DataLoader
     """
     assert tokenizer, "Must include tokenizer"
@@ -68,7 +69,7 @@ def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase
         scores_duplicated = []
         errors_duplicated = []
         # quantize scores into bins
-        scores_binned = quantize_to_bins(scores, num_bins=10)
+        scores_binned = quantize_to_bins(scores, num_bins=num_bins)
         for token in tokens_vec:
             # Each word in T5 Tokenizer starts with '▁', if word doesn't start with this character the score and the
             # errors for that idx should be duplicated.
