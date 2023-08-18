@@ -4,6 +4,11 @@ from transformers import T5ForConditionalGeneration
 
 
 class RecAceEmbeddingBlock(nn.Module):
+    """
+    An embedding block that for our REC-ACE model, that can handle both confidence scores vector and input ids vector.
+
+    return an embedding vector of the words and scores embeddings summed up.
+    """
     def __init__(self, vocab_size, bin_size, embedding_size):
         super().__init__()
         self.words_emb = nn.Embedding(vocab_size, embedding_size)
@@ -15,7 +20,11 @@ class RecAceEmbeddingBlock(nn.Module):
         return x_words_emb + x_scores_emb
 
 
-class RecACEWarpModel(nn.Module):
+class RecACEWrapModel(nn.Module):
+    """
+    RecACE Wrapper module.
+    Can handle input for both original T5 and our Rec ACE method.
+    """
     def __init__(self, t5_type, model_type, bin_size=None):
         super().__init__()
         assert t5_type in ['t5-small'], f"{t5_type} is not a valid model type"
@@ -31,7 +40,14 @@ class RecACEWarpModel(nn.Module):
                                                       bin_size=bin_size,
                                                       embedding_size=embedding_size)
 
-    def forward(self, input_ids, labels, scores_ids=None):
+    def forward(self, input_ids: torch.Tensor, labels: torch.Tensor, scores_ids: torch.Tensor = None):
+        """
+        Forward pass for the model
+        :param input_ids: words tokens
+        :param labels: ground truth
+        :param scores_ids: confidence scores tokens
+        :return:
+        """
         if self.model_type == 'original':
             results = self.model(input_ids=input_ids, labels=labels)
         else:
@@ -44,7 +60,7 @@ class RecACEWarpModel(nn.Module):
 if __name__ == '__main__':
 
     model_type = 'rec_ace'
-    model = RecACEWarpModel(t5_type='t5-small', model_type=model_type, bin_size=10)
+    model = RecACEWrapModel(t5_type='t5-small', model_type=model_type, bin_size=10)
     input_ids = torch.randint(low=0, high=500, size=(1, 500))
     labels = torch.randint(low=0, high=500, size=(1, 500))
     scores_ids = torch.randint(low=0, high=10, size=(1, 500))
