@@ -11,8 +11,8 @@ class RecAceEmbeddingBlock(nn.Module):
     """
     def __init__(self, vocab_size, bin_size, embedding_size):
         super().__init__()
-        self.words_emb = nn.Embedding(vocab_size, embedding_size)
-        self.scores_emb = nn.Embedding(bin_size, embedding_size)
+        self.words_emb = nn.Embedding(vocab_size + 2, embedding_size, padding_idx=0)
+        self.scores_emb = nn.Embedding(bin_size + 2, embedding_size, padding_idx=0)
 
     def forward(self, input_ids, scores_ids):
         x_words_emb = self.words_emb(input_ids)

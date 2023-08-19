@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import T5Tokenizer
 
-from .utils import read_json, quantize_to_bins
+from data_utils.utils import read_json, quantize_to_bins
 
 
 class SentencesDataset(Dataset):
@@ -32,7 +32,7 @@ class SentencesDataset(Dataset):
         }
 
 
-def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True, num_bins=10):
+def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True, num_bins=10, debug=False):
     """
     Prepare data for training
     :param data: list of data loaded from jsons
@@ -51,6 +51,14 @@ def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase
     scores_list = []
     errors_list = []
     ids_list = []
+
+    if debug:
+        N_data = len(data)
+        use_only = 0.1
+        to_use = round(use_only * N_data)
+        data = data[:to_use]
+        print(f'Debug Mode - using only {to_use} out of {N_data}, training datapoints')
+
     for datapoint in data:
         # Prepare data for tokenizer
         asr = datapoint['asr']
@@ -98,10 +106,12 @@ def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase
     return data_sequences
 
 if __name__ == '__main__':
-    tokenizer = T5Tokenizer.from_pretrained("t5-small")
 
+    tokenizer = T5Tokenizer.from_pretrained("t5-small")
     path = '../data/default/train_clean.json'
+    debug = True
+
     data = read_json(json_path=path)
-    train_loader = prepare_data(data, tokenizer=tokenizer)
+    train_loader = prepare_data(data, tokenizer=tokenizer, debug=debug)
     batch = next(iter(train_loader))
     print(batch)
