@@ -10,12 +10,11 @@ from .utils import read_json, quantize_to_bins
 
 
 class SentencesDataset(Dataset):
-    def __init__(self, sentences, labels, scores, errors, ids):
+    def __init__(self, sentences, labels, scores, errors):
         self.sentences = sentences
         self.scores = scores
         self.errors = errors
         self.labels = labels
-        self.ids = ids
 
     def __len__(self):
         return len(self.sentences)
@@ -25,13 +24,11 @@ class SentencesDataset(Dataset):
         scores = torch.tensor(self.scores[idx])
         errors = torch.tensor(self.errors[idx])
         labels = torch.LongTensor(self.labels[idx])
-        ids = torch.tensor(self.ids[idx])
         return {
             'sentences': sentences,
             'scores': scores,
             'errors': errors,
-            'labels': labels,
-            'ids': ids,
+            'labels': labels
         }
 
 
@@ -53,7 +50,7 @@ def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase
     scores_list = []
     errors_list = []
     ids_list = []
-    for datapoint in tqdm.tqdm(data):
+    for datapoint in data:
         # Prepare data for tokenizer
         asr = datapoint['asr']
         words_temp, scores, errors = zip(*asr)
