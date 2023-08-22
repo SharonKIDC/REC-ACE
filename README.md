@@ -14,3 +14,9 @@ The environment is based on python 3.8.x, given the following paths you can inst
 python -m pip install --upgrade pip
 pip install -r <project-root>/requirements.txt
 ```
+
+# Data prep
+Run the following command in your shell after activating the venv
+``` bash
+python download_data.py
+```

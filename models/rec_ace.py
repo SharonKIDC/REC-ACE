@@ -1,3 +1,6 @@
+import os
+import re
+import pandas as pd
 import torch
 import torch.nn as nn
 from transformers import T5ForConditionalGeneration, T5Config
@@ -60,6 +63,50 @@ class RecACEWrapModel(nn.Module):
             inputs_embeds = self.rec_ace_block(input_ids=input_ids, scores_ids=scores_ids)
             results = self.model(inputs_embeds=inputs_embeds, labels=labels)
         return results
+    
+    def save_to_disk(self, filepath):
+        """
+        Save the current state of the model to a file on disk.
+
+        Parameters:
+            filepath (str): Path to the file where the model state will be saved.
+        """
+        torch.save(self.state_dict(), filepath)
+
+    @classmethod
+    def load_from_disk(cls, filepath, t5_type, model_type, use_pretrained=False, bin_size=None):
+        """
+        Load the model state from a file on disk and create a new instance of the class.
+
+        Parameters:
+            filepath (str): Path to the file containing the saved model state.
+            t5_type (str): T5 model type.
+            model_type (str): Model type ('original' or 'rec_ace').
+            use_pretrained (bool): Whether to use pretrained weights for the base T5 model.
+            bin_size (int): Size of the score bins (required for 'rec_ace' model).
+
+        Returns:
+            RecACEWrapModel: An instance of the class with the loaded state.
+        """
+        new_instance = cls(t5_type, model_type, use_pretrained, bin_size)
+        new_instance.load_state_dict(torch.load(filepath))
+        return new_instance
+
+
+def detokenize_and_clean(tokenizer, embedded_predicted):
+    """
+    Detokenize the predicted sentences and clean them from <.*> tags.
+    :param tokenizer: T5 tokenizer
+    :param embedded_predicted: list of predicted sentences
+    :return: list of cleaned sentences
+    """
+    # Detokenize    
+    sentences = tokenizer.batch_decode(embedded_predicted)
+    
+    # find all <.*> and replace with ''
+    sentences = [re.sub('<.*?>', '', sentence) for sentence in sentences]
+
+    return sentences
 
 
 if __name__ == '__main__':
