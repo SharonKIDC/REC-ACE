@@ -255,7 +255,7 @@ class Evaluator:
         else: # wer, bleu, gleu, loss
             best_epoch = metrics_df[metric_name].idxmin()
         
-        return best_epoch + 1 # +1 because epoch numbers start from 1
+        return best_epoch
 
 
 if __name__ == "__main__":

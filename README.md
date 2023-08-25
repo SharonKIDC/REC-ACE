@@ -1,22 +1,24 @@
-# REC-ACE
-Final Project in NLP course (3523)
+# REC-ACE - Robust Error Correction for ASR using Confidence Embedding
+Final Project for NLP Course (3523) at Reichman University, Israel
 
+Authors:
+- Sharon Koubi (sharon.koubi@post.runi.ac.il)
+- Dan Botchan (dan.botchan@post.runi.ac.il)
 
-# Environment Installation
-The environment is based on python 3.8.x, given the following paths you can install your virtual environment:  
-- `<interpreter-path>` - the path to python 3.8.x interpreter  
-- `<venv-root>` - a path where you'd like to install the virtual environment  
-- `<project-root>` - a path where the code is cloned to
+Feel free to contact the authors via the provided email addresses for any inquiries or assistance.
 
-```Bash
-<interpreter-path> -m venv <venv-root>
-<venv-root>/Scripts/activate
-python -m pip install --upgrade pip
-pip install -r <project-root>/requirements.txt
-```
+## Environment Installation
+Please use any standard NLP virtual environment with PyTorch installed for training.
 
-# Data prep
-Run the following command in your shell after activating the venv
+## Data Preparation
+To prepare the data, run the following command in your shell after activating the virtual environment:
 ``` bash
 python download_data.py
 ```
+
+## Training Pipeline
+To initiate the training pipeline, run the `train_pipeline.ipynb` notebook from the beginning. Please note that training a model for 50 epochs on an Nvidia RTX 3090 may take 12-16 hours.
+
+## Evaluation Pipeline
+After running the training, edit the path of the training experiment result directories in the `eval_pipeline.ipynb` notebook for each experiment, and then run the notebook.
+
