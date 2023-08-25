@@ -192,6 +192,8 @@ def get_metric_func(metric_name: str) -> Callable:
         return calculate_bleu
     elif metric_name == "gleu":
         return calculate_gleu
+    elif metric_name == "bs":
+        return calculate_bert_score
     else:
         raise ValueError(f"Metric function '{metric_name}' does not exist.")
 
