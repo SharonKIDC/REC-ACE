@@ -31,10 +31,9 @@ class SentencesDataset(Dataset):
             'labels': labels
         }
 
-
-def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True, num_bins=10, debug=False):
+def prepare_data_basic(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True, num_bins=10, debug=False):
     """
-    Prepare data for training
+    Prepare data for training of REC-ACE and baseline T5
     :param data: list of data loaded from jsons
     :param tokenizer: what tokenizer to use
     :param batch_size: batch size for data loader
@@ -105,12 +104,70 @@ def prepare_data(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase
     data_sequences = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
     return data_sequences
 
+def prepare_data_for_prompt_engineering(data: list, tokenizer=None, batch_size=8, shuffle=True, lowcase=True, num_bins=10, debug=False):
+    """
+    Prepare data for training T5 with prompt engineering
+    :param data: list of data loaded from jsons
+    :param tokenizer: what tokenizer to use
+    :param batch_size: batch size for data loader
+    :param shuffle: to shuffle or not to shuffle
+    :param lowcase: whether to use transform all sentences in data to lower case
+    :param num_bins: number of bins when quantize the coinfidence scores
+    :return: DataLoader
+    """
+    assert tokenizer, "Must include tokenizer"
+    prompt = """correct the sentence based on confidence scores: sentence: "{}",scores: "{}" """
+    # First enroll all data to lists, for easier encoding with tokkenizer
+    truth_list = []
+    sentences_list = []
+    scores_list = []
+    errors_list = []
+    ids_list = []
+
+    if debug:
+        N_data = len(data)
+        use_only = 0.1
+        to_use = round(use_only * N_data)
+        data = data[:to_use]
+        print(f'Debug Mode - using only {to_use} out of {N_data}, training datapoints')
+
+    for datapoint in data:
+        # Prepare data for tokenizer
+        asr = datapoint['asr']
+        words_temp, scores, errors = zip(*asr)
+        words_vec = ' '.join(words_temp)
+        if lowcase:
+            words_vec = words_vec.lower()
+        # quantize scores into bins
+        scores_binned = quantize_to_bins(scores, num_bins=num_bins)
+        ids_list.append(datapoint['id'])
+        truth_list.append(datapoint['truth'])
+        sentence =  prompt.format(words_vec, ', '.join(map(str, scores_binned)))
+        sentences_list.append(sentence)
+        scores_list.append(scores_binned)
+        errors_list.append(errors)
+
+    print('- Converting the input sentences into tokens')
+    sentences = tokenizer(sentences_list, padding=True, return_tensors='pt')['input_ids']
+    print('- Converting the GT sentences into tokens')
+    labels = tokenizer(truth_list, padding=True, return_tensors='pt')['input_ids']
+    pad_width = lambda vec: max(0, len(sentences[0]) - len(vec))
+    scores = np.array([np.pad(score, (0, pad_width(score))) for score in scores_list])
+    errors = np.array([np.pad(error, (0, pad_width(error))) for error in errors_list])
+
+    dataset = SentencesDataset(sentences=sentences, scores=scores, errors=errors, labels=labels)
+    data_sequences = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+    return data_sequences
+
 if __name__ == '__main__':
 
     tokenizer = T5Tokenizer.from_pretrained("t5-small")
     path = '../data/default/train_clean.json'
     debug = True
+    # Basic true loads data loader for REC-ACE training. Basic False load data loader for prompt engineering.
+    basic = False
 
+    prepare_data = prepare_data_basic if basic else prepare_data_for_prompt_engineering
     data = read_json(json_path=path)
     train_loader = prepare_data(data, tokenizer=tokenizer, debug=debug)
     batch = next(iter(train_loader))

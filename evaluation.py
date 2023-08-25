@@ -7,6 +7,36 @@ from nltk.translate.gleu_score import sentence_gleu
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
+from bert_score import score as bert_score
+
+
+def calculate_bert_score(reference, predicted):
+    """
+    Calculate BERTScore (https://arxiv.org/pdf/1904.09675.pdf) between reference and predicted sentences.
+
+    Args:
+        reference (str or list): Reference sentence(s).
+        predicted (str or list): Predicted sentence(s).
+
+    Returns:
+        float: Bert F1 score.
+
+    """
+
+    _reference = reference if isinstance(reference, list) else [reference]
+    _predicted = predicted if isinstance(predicted, list) else [predicted]
+    assert len(_reference) == len(_predicted), "The number of reference and predicted sentences must be the same."
+
+    def _calc_bert(reference, predicted):
+        reference_tokens = [reference]
+        predicted_tokens = [predicted]
+
+        # Calculate Levenshtein distance
+        P, R, F1 = bert_score(reference_tokens, predicted_tokens, lang="en")
+        return F1.mean()
+
+    return sum([_calc_bert(ref, pred) for ref, pred in zip(_reference, _predicted)]) / len(_reference)
+
 
 
 def calculate_wer(reference, predicted):
@@ -130,7 +160,7 @@ def calculate_metrics(reference, predicted):
         predicted (str or list): Predicted sentence(s).
 
     Returns:
-        tuple: WER, EM, BLEU and GLEU scores.
+        tuple: WER, EM, BLEU, GLEU and BERTscore scores.
 
     """
     
@@ -138,7 +168,8 @@ def calculate_metrics(reference, predicted):
     em = calculate_exact_match(reference, predicted)
     bleu = calculate_bleu(reference, predicted)
     gleu = calculate_gleu(reference, predicted)
-    return wer, em, bleu, gleu
+    bs = calculate_bert_score(reference, predicted)
+    return wer, em, bleu, gleu, bs
 
 
 def get_metric_func(metric_name: str) -> Callable:
@@ -182,7 +213,6 @@ class Evaluator:
     def calculate_metrics(self, set_type, reference, predicted):
         for metric_name, metric_func in self.metrics.items():
             self.epoch_metrics[set_type][metric_name].append(metric_func(reference, predicted))
-
 
     def end_epoch_routine(self, print_metrics=False, indent = 0):
         # Calculate mean of metrics for each set type
@@ -269,8 +299,9 @@ if __name__ == "__main__":
     }
 
 
-    for caption, calculate_metric in zip(["WER", "EM", "BLEU", "GLEU"],
-                                         [calculate_wer, calculate_exact_match, calculate_bleu, calculate_gleu]):
+    for caption, calculate_metric in zip(["WER", "EM", "BLEU", "GLEU", "BertScore"],
+                                         [calculate_wer, calculate_exact_match, calculate_bleu, calculate_gleu,
+                                          calculate_bert_score]):
         for error_type, predicted_transcript in predicted_transcripts.items():
             print(f"{caption}:\t{calculate_metric(reference_transcript, predicted_transcript):.4f} ({error_type})")
         
