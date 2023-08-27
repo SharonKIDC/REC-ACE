@@ -89,7 +89,7 @@ class RecACEWrapModel(nn.Module):
             RecACEWrapModel: An instance of the class with the loaded state.
         """
         new_instance = cls(t5_type, model_type, use_pretrained, bin_size)
-        new_instance.load_state_dict(torch.load(filepath))
+        new_instance.load_state_dict(torch.load(filepath, map_location='cpu'))
         return new_instance
 
 
