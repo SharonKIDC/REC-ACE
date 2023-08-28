@@ -22,3 +22,8 @@ To initiate the training pipeline, run the `train_pipeline.ipynb` notebook from 
 ## Evaluation Pipeline
 After running the training, edit the path of the training experiment result directories in the `eval_pipeline.ipynb` notebook for each experiment, and then run the notebook.
 
+### To download our best achieved results
+Execute the command below to initiate the download and storage of the best models in their respective locations. Subsequently, you can run the `eval_pipeline.ipynb` notebook to observe the generated results.
+``` bash
+python download_data.py -url "1t7EEBSC7rOgf0e8Lq5m-xWRaCv0N-_Ro"
+```
