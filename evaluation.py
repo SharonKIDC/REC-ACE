@@ -7,7 +7,23 @@ from nltk.translate.gleu_score import sentence_gleu
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
-from bert_score import score as bert_score
+from bert_score.scorer import BERTScorer
+import transformers
+import logging
+
+transformers.tokenization_utils.logger.setLevel(logging.ERROR)
+transformers.configuration_utils.logger.setLevel(logging.ERROR)
+transformers.modeling_utils.logger.setLevel(logging.ERROR)
+
+class BERTS():
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(BERTS, cls).__new__(cls)
+            cls.instance.scorer = BERTScorer(model_type='microsoft/deberta-xlarge-mnli', device=None, lang='en')
+        return cls.instance
+
+    def calc_score(self, reference, predicted):
+        return self.scorer.score(predicted, reference)
 
 
 def calculate_bert_score(reference, predicted):
@@ -26,13 +42,14 @@ def calculate_bert_score(reference, predicted):
     _reference = reference if isinstance(reference, list) else [reference]
     _predicted = predicted if isinstance(predicted, list) else [predicted]
     assert len(_reference) == len(_predicted), "The number of reference and predicted sentences must be the same."
-
+    scorer = BERTS()
+    bert_score = scorer.calc_score
     def _calc_bert(reference, predicted):
         reference_tokens = [reference]
         predicted_tokens = [predicted]
 
         # Calculate Levenshtein distance
-        P, R, F1 = bert_score(reference_tokens, predicted_tokens, lang="en")
+        P, R, F1 = bert_score(reference_tokens, predicted_tokens)
         return F1.mean()
 
     return sum([_calc_bert(ref, pred) for ref, pred in zip(_reference, _predicted)]) / len(_reference)
